@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS "movies" (
+  "id" BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  "created_at" TIMESTAMP(0) with time zone NOT NULL DEFAULT now(),
+  "title" TEXT NOT NULL,
+  "year" INTEGER NOT NULL,
+  "runtime" INTEGER NOT NULL,
+  "genres" TEXT[] NOT NULL,
+  "version" INTEGER NOT NULL DEFAULT 1
+);
