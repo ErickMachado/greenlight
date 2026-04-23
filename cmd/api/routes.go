@@ -15,7 +15,7 @@ func (app *application) routes() http.Handler {
 
 	mux.HandlerFunc(http.MethodPost, "/v1/movies", app.createMovieHandler)
 	mux.HandlerFunc(http.MethodGet, "/v1/movies/:id", app.showMovieHandler)
-	mux.HandlerFunc(http.MethodPut, "/v1/movies/:id", app.updateMovieHandler)
+	mux.HandlerFunc(http.MethodPatch, "/v1/movies/:id", app.updateMovieHandler)
 	mux.HandlerFunc(http.MethodDelete, "/v1/movies/:id", app.deleteMovieHandler)
 
 	return app.recoverPanic(mux)
