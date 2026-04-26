@@ -56,9 +56,10 @@ func (m MovieModel) Insert(movie *Movie) error {
 	return m.DB.QueryRowContext(ctx, stmt, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
-func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, error) {
+func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
 	stmt := fmt.Sprintf(`
 		SELECT
+			count(*) over(),
 			"id",
 			"created_at",
 			"title",
@@ -81,15 +82,17 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 	args := []any{title, pq.Array(genres), filters.limit(), filters.offset()}
 	rows, err := m.DB.QueryContext(ctx, stmt, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer rows.Close()
 
+	totalRecords := 0
 	movies := []*Movie{}
 	for rows.Next() {
 		var movie Movie
 
 		err := rows.Scan(
+			&totalRecords,
 			&movie.ID,
 			&movie.CreatedAt,
 			&movie.Title,
@@ -99,17 +102,19 @@ func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*M
 			&movie.Version,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		movies = append(movies, &movie)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
-	return movies, nil
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
+
+	return movies, metadata, nil
 }
 
 func (m MovieModel) Get(id int) (*Movie, error) {
